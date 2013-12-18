@@ -108,12 +108,38 @@ var List = (function() {
 	return check(this, list);
     }
 
+    List.prototype.rank = function() {
+	function rankAux(array, result) {
+	    var dim = array.map(function(x) {
+		if(x instanceof Array)
+		    return x.length;
+		return 1;
+	    });
+	    function check(arr, ele, r) {
+		if(arr.length === 0) {
+		    r = true;
+		    return r;
+		}
+		else if(ele == arr.first()) {
+		    return check(arr.rest(), ele, r);
+		}
+		else
+		    return r;
+	    }
+	    if(!(check(dim, dim.first(), false) && dim.first() > 1)) {
+		result = result.concat([dim.length()]);
+		return result;
+	    }
+	    result = result.concat([array.length]);
+	    array.map(function(x) { return rankAux(x, result); });
+	    
+	}
 
-    List.prototype.rank = function(list) {
-	
+	return rankAux(this, new List());
+	 	
     }
 
-    List.prototype.transpose = function(list) {
+    List.prototype.transpose = function() {
 	
     }
 
