@@ -29,6 +29,7 @@ var List = (function() {
 
 
     // mutable concat, accepts only an array
+    // concat overwrites the Array concat and makes things worse
     List.prototype.concat = function(arg) {
 	arg.forEach((function(x) {this.push(x)}).bind(this));
 	return this;
@@ -109,36 +110,59 @@ var List = (function() {
     }
 
     List.prototype.rank = function() {
-	function rankAux(array, result) {
-	    var dim = array.map(function(x) {
+	function dimension(array) {
+	    return array.map(function(x) {
 		if(x instanceof Array)
 		    return x.length;
-		return 1;
+		return 0;
 	    });
-	    function check(arr, ele, r) {
-		if(arr.length === 0) {
-		    r = true;
-		    return r;
-		}
-		else if(ele == arr.first()) {
-		    return check(arr.rest(), ele, r);
-		}
-		else
-		    return r;
-	    }
-	    if(!(check(dim, dim.first(), false) && dim.first() > 1)) {
-		result = result.concat([dim.length()]);
-		return result;
-	    }
-	    result = result.concat([array.length]);
-	    array.map(function(x) { return rankAux(x, result); });
-	    
 	}
+	function check(arr, ele, r) {
+	    if(arr.length === 0) {
+		r = true;
+		return r;
+	    }
+	    else if(ele == arr.first()) {
+		return check(arr.rest(), ele, r);
+	    }
+	    else
+		return r;
+	}
+	function depthAux(arr, n) {
+	    if(n === 0)
+		return arr;
 
-	return rankAux(this, new List());
-	 	
+	    //Another reason to think of a better way to integrate Array concat into List
+	    // flat function: flattens a list 
+	    arr = arr.reduce(function(a, b) {
+		if(a instanceof List && !(b instanceof List)) {
+		    var t = a.clone();
+		    return t.concat([b]);
+		}
+		else if(b instanceof List) {
+		    var t = a.clone();
+		    return t.concat(b);
+		}
+		return List([a, b]);
+	    });
+	    n--;
+	    return depthAux(arr, n);
+	}
+	function rankAux(init, arr, depth, result) {
+	    var d = dimension(arr);
+	    if(check(d, d.first(), false) && d.first() > 0) {
+		result = result.concat([d.first()]);
+		depth++;
+ 		arr = depthAux(init, depth);
+		return rankAux(init, arr, depth, result);
+	    }
+	    return result;
+	}
+	var array = this.clone();
+	var init = this.clone();
+	return rankAux(init, array, 0, new List([this.length]));
     }
-
+    
     List.prototype.transpose = function() {
 	
     }
@@ -146,6 +170,3 @@ var List = (function() {
     return List;
 
 })();
-
-
-
