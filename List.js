@@ -1,5 +1,6 @@
 var List = (function() {
 
+    // TODO: make the constructor to take multiple arguments instead of an array
     function List(array) {
 	if(!(this instanceof List))
 	    return new List(array);
@@ -26,7 +27,6 @@ var List = (function() {
     List.prototype.rest = function() {
 	return List(this.slice(1));
     }
-
 
     // mutable concat, accepts only an array
     // concat overwrites the Array concat and makes things worse
@@ -109,6 +109,8 @@ var List = (function() {
 	return check(this, list);
     }
 
+    // TODO: optimize by not flattening at each depth my mutating the array passed
+    // in the next recursion. 
     List.prototype.rank = function() {
 	function dimension(array) {
 	    return array.map(function(x) {
@@ -162,11 +164,23 @@ var List = (function() {
 	var init = this.clone();
 	return rankAux(init, array, 0, new List([this.length]));
     }
-    
+
     List.prototype.transpose = function() {
+	var array = this.clone();
+	if(array.length === 0)
+	    return array;
+	if(array.rank().length === 1) {
+	    return array.map(function(x) { return List([x]); }).transpose();
+	}
+	function transposeAux(arr, result) {
+	    if(arr.first().length === 0)
+		return result;
+	    result = result.concat([arr.map(function(x) { return x.first(); })]);
+	    arr = arr.map(function(x) { return x.rest(); });
+	    return transposeAux(arr, result);
+	}
 	
+	return transposeAux(array, new List());
     }
-
     return List;
-
 })();
